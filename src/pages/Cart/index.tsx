@@ -1,4 +1,4 @@
-import { Fragment } from 'react'
+import { ChangeEvent, Fragment } from 'react'
 import { SubmitHandler, useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -91,6 +91,8 @@ export function Cart() {
     register,
     handleSubmit,
     watch,
+    setValue,
+    setFocus,
     formState: { errors },
   } = useForm<FormInputs>({
     resolver: zodResolver(newOrder),
@@ -118,6 +120,20 @@ export function Cart() {
     checkout(data)
   }
 
+  const checkCEP = (e: ChangeEvent<HTMLInputElement>): void => {
+    const cep = e.target.value.replace(/[^\d]/g, '')
+    console.log(cep)
+    fetch(`https://viacep.com.br/ws/${cep}/json/`).then(res => res.json()).then(data => {
+      console.log(data)
+      setValue('street', data.logradouro);
+      setValue('neighborhood', data.bairro);
+      setValue('city', data.localidade);
+      setValue('state', data.uf);
+      setFocus('number');
+
+    })
+  }
+
   return (
     <Container>
       <InfoContainer>
@@ -138,10 +154,11 @@ export function Cart() {
             <AddressForm>
               <TextInput
                 placeholder="CEP"
-                type="number"
+                type="text"
                 containerProps={{ style: { gridArea: 'cep' } }}
                 error={errors.cep}
                 {...register('cep', { valueAsNumber: true })}
+                onBlur={checkCEP}
               />
 
               <TextInput
